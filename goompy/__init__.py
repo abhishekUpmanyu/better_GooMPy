@@ -20,6 +20,7 @@ import PIL.Image
 import sys
 import os
 import time
+import hashlib
 
 from io import BytesIO
 
@@ -33,7 +34,8 @@ else:
 try:
     from key import _KEY
 except:
-    _KEY = ''
+    print('Error importing key')
+    _KEY = '&key=AIzaSyC5Mdot0RFBMv-kZmIw87aYQJKXVF-EbCI'
 
 _EARTHPIX = 268435456  # Number of pixels in half the earth's circumference at zoom = 21
 _DEGREE_PRECISION = 4  # Number of decimal places for rounding coordinates
@@ -72,10 +74,11 @@ def _grab_tile(lat, lon, zoom, maptype, markers, paths, _TILESIZE, sleeptime):
 
     specs = lat, lon, zoom, maptype, _TILESIZE, _TILESIZE
 
-    filename = 'mapscache/' + ('%f_%f_%d_%s_%d_%d' % specs) + '_' + str(markers) + '_' + str(paths) + '.jpg'
-
-    if os.path.isfile(filename):
-        tile = PIL.Image.open(filename)
+    filename = 'mapscache/' + ('%f_%f_%d_%s_%d_%d' % specs) + '_' + str(markers) + '_' + str(paths)
+    filename.encode('utf-8')
+    
+    if os.path.isfile('mapscache/' + hashlib.md5(filename.encode('utf-8')).hexdigest() + '.jpg'):
+        tile = PIL.Image.open('mapscache/' + hashlib.md5(filename.encode('utf-8')).hexdigest() + '.jpg')
 
     else:
         url = urlbase
@@ -87,7 +90,8 @@ def _grab_tile(lat, lon, zoom, maptype, markers, paths, _TILESIZE, sleeptime):
             tile = tile.convert('RGB')
         if not os.path.exists('mapscache'):
             os.mkdir('mapscache')
-        tile.save(filename)
+        filename.encode('utf-8')
+        tile.save('mapscache/' + hashlib.md5(filename.encode('utf-8')).hexdigest() + '.jpg')
         time.sleep(sleeptime) # Choke back speed to avoid maxing out limit
 
     return tile
